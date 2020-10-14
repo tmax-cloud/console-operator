@@ -1,0 +1,13 @@
+apiVersion: console.tmax.com/v1alpha1
+kind: Console
+metadata:
+  name: example-console
+spec:
+  consoleApp: 
+    repository: "tmaxcloudck/hypercloud-console"
+    tag: latest
+    imagePullPolicy: "IfNotPresent"
+    replicas: 1
+    port: 433
+    targetPort: 6433
+    serviceType: "NodePort"
