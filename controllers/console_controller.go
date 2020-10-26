@@ -47,6 +47,7 @@ type ConsoleReconciler struct {
 
 // +kubebuilder:rbac:groups=hypercloud.tmaxcloud.com,resources=consoles,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=hypercloud.tmaxcloud.com,resources=consoles/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=*,resources=*,verbs=*
 
 func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
