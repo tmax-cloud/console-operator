@@ -32,9 +32,3 @@ rules:
   - get
   - patch
   - update
-- apiGroups:
-  - rbac
-  resources:
-  - '*'
-  verbs:
-  - '*'

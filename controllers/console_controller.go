@@ -21,10 +21,12 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
+	"github.com/spf13/viper"
 	hypercloudv1 "github.com/tmax-cloud/console-operator/api/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -38,14 +40,9 @@ type ConsoleReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-var (
-	scheduledTimeAnnotation = "time.console.hypercloud.tmaxcloud.com/scheduled-at"
-)
-
 // +kubebuilder:rbac:groups=hypercloud.tmaxcloud.com,resources=consoles,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=hypercloud.tmaxcloud.com,resources=consoles/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=*,verbs=*
-// +kubebuilder:rbac:groups=rbac,resources=*,verbs=*
 
 func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
@@ -72,6 +69,9 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	log.Info(console.Namespace + "/" + console.Name)
+
+	viper.AddConfigPath("/root/")
+	viper.SafeWriteConfig()
 
 	sa, err := r.desiredServiceAccount(console)
 	if err != nil {
@@ -189,17 +189,10 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
-// var (
-// 	deployOwnerKey = ".metadata.controller"
-// 	apiGVstr       = hypercloudv1.GroupVersion.String()
-// )
-
 func (r *ConsoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&hypercloudv1.Console{}).
-		Owns(&batchv1.Job{}).
-		Owns(&appsv1.Deployment{}).
-		Owns(&corev1.Service{}).
+		Owns(&v1.ConfigMap{}).
 		Complete(r)
 }

@@ -28,8 +28,25 @@ import (
 type ConsoleSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	Configuration Configuration `json:"configuration"`
+	App           ConsoleApp    `json:"app"`
+}
 
-	App ConsoleApp `json:"app"`
+// +k8s:deepcopy-gen=true
+// HTTPConfiguration contains all the HTTP configuration parameters.
+type Configuration struct {
+	Routers map[string]*Router `json:"routers,omitempty" toml:"routers,omitempty" yaml:"routers,omitempty" export:"true"`
+}
+
+// +k8s:deepcopy-gen=true
+
+// Router holds the router configuration.
+type Router struct {
+	// Middlewares []string `json:"middlewares,omitempty" toml:"middlewares,omitempty" yaml:"middlewares,omitempty" export:"true"`
+	Server string `json:"server,omitempty" toml:"server,omitempty" yaml:"server,omitempty" export:"true"`
+	Rule   string `json:"rule,omitempty" toml:"rule,omitempty" yaml:"rule,omitempty"`
+	Path   string `json:"path,omitempty" yaml:"path,omitempty"`
+	// Priority    int              `json:"priority,omitempty" toml:"priority,omitempty,omitzero" yaml:"priority,omitempty" export:"true"
 }
 
 type ConsoleApp struct {
