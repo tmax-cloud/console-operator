@@ -10,21 +10,12 @@ kind: Console
 metadata:
   name: hc-console1
 spec:
-  app: 
-    repository: "tmaxcloudck/hypercloud-console"
-    tag: "4.2.0.0"
-    replicas: 1
-    serviceType: "NodePort"
   configuration:
     routers:
       show:
         server: "http://192.168.8.62:9002/"
         rule: "Host(`console`) && PathPrefix(`/console/`)"
         path: "/console/"
-      cpd:
-        server: "http://cpdch.org/"
-        rule: "Host(`cpdch.org`) && PathPrefix(`/cpd/`)"
-        path: "/cpd/"
       naver:
         server: "https://www.naver.com/"
         rule: "Host(`naver.com`) && PathPrefix(`/naver/`)"
@@ -37,3 +28,7 @@ spec:
         server: "https://google.com/"
         rule: "Host(`google.com`) && PathPrefix(`/google/`)"
         path: "/google/"
+      k8s: 
+        server: "https://172.23.0.2/"
+        rule: "PathPrefix(`/api/k8s/test/`)" 
+        path: "/api/k8s/test/"

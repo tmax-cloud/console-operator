@@ -46,20 +46,6 @@ spec:
           spec:
             description: ConsoleSpec defines the desired state of Console
             properties:
-              app:
-                properties:
-                  replicas:
-                    format: int32
-                    type: integer
-                  repository:
-                    type: string
-                  serviceType:
-                    description: Service Type string describes ingress methods for
-                      a service
-                    type: string
-                  tag:
-                    type: string
-                type: object
               configuration:
                 description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
                   Important: Run "make" to regenerate code after modifying this file'
@@ -81,7 +67,6 @@ spec:
                     type: object
                 type: object
             required:
-            - app
             - configuration
             type: object
           status:

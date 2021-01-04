@@ -18,14 +18,13 @@ package controllers
 
 import (
 	"context"
-	"strconv"
+	"encoding/json"
+	"fmt"
+	"os"
 
 	"github.com/go-logr/logr"
-	"github.com/spf13/viper"
 	hypercloudv1 "github.com/tmax-cloud/console-operator/api/v1"
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
+	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -70,120 +69,114 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	log.Info(console.Namespace + "/" + console.Name)
 
-	viper.AddConfigPath("/root/")
-	viper.SafeWriteConfig()
+	fmt.Printf("Original: \n %v \n", console)
+	yamlConsole := console.DeepCopy()
 
-	sa, err := r.desiredServiceAccount(console)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	yamlFile, _ := yaml.Marshal(yamlConsole.Spec.Configuration)
+	fy, _ := os.Create("/home/jinsoo/console-yaml.yaml")
+	fy.Write(yamlFile)
+	jsonFile, _ := json.Marshal(console.DeepCopyObject())
+	fj, _ := os.Create("/home/jinsoo/console-json.json")
+	fj.Write(jsonFile)
 
-	cr, err := r.desiredClusterRole(console)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	yaml.Unmarshal(yamlFile, &console)
+	fmt.Printf("YAML: \n %v \n", console)
 
-	crb, err := r.desiredClusterRoleBinding(console)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	json.Unmarshal(jsonFile, &console)
+	fmt.Printf("JSON: \n %v \n", console)
+	// log.Info("wrote  file : %v ", n1)
+	// viper.AddConfigPath("/root/")
+	// viper.SafeWriteConfig()
 
-	job, err := r.desiredJob(console)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	// sa, err := r.desiredServiceAccount(console)
+	// if err != nil {
+	// 	return ctrl.Result{}, err
+	// }
 
-	log.Info("verify", "spec", job.Spec)
-	depl, err := r.desiredDeployment(console)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	// cr, err := r.desiredClusterRole(console)
+	// if err != nil {
+	// 	return ctrl.Result{}, err
+	// }
 
-	log.Info(depl.Spec.Selector.String())
+	// crb, err := r.desiredClusterRoleBinding(console)
+	// if err != nil {
+	// 	return ctrl.Result{}, err
+	// }
 
-	svc, err := r.desiredService(console)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	// job, err := r.desiredJob(console)
+	// if err != nil {
+	// 	return ctrl.Result{}, err
+	// }
 
-	applyOpts := []client.PatchOption{client.ForceOwnership, client.FieldOwner("console-controller")}
+	// applyOpts := []client.PatchOption{client.ForceOwnership, client.FieldOwner("console-controller")}
 
-	if err := r.Patch(ctx, &sa, client.Apply, applyOpts...); err != nil {
-		log.Error(err, "error is occur when sa")
-		sa := &corev1.ServiceAccount{}
-		r.Get(ctx, req.NamespacedName, sa)
-		return r.removeSa(ctx, sa, log)
-	}
+	// if err := r.Patch(ctx, &sa, client.Apply, applyOpts...); err != nil {
+	// 	log.Error(err, "error is occur when sa")
+	// 	sa := &corev1.ServiceAccount{}
+	// 	r.Get(ctx, req.NamespacedName, sa)
+	// 	return r.removeSa(ctx, sa, log)
+	// }
 
-	// if err := r.Create(ctx, &cr, client.Apply, applyOpts...); err != nil {
-	if err := r.Update(ctx, &cr); err != nil {
-		log.Error(err, "error is occure when cr")
-		cr := &rbacv1.ClusterRole{}
-		r.Get(ctx, client.ObjectKey{Name: req.Name}, cr)
-		return r.removeCr(ctx, cr, log)
-	}
+	// // if err := r.Create(ctx, &cr, client.Apply, applyOpts...); err != nil {
+	// if err := r.Update(ctx, &cr); err != nil {
+	// 	log.Error(err, "error is occure when cr")
+	// 	cr := &rbacv1.ClusterRole{}
+	// 	r.Get(ctx, client.ObjectKey{Name: req.Name}, cr)
+	// 	return r.removeCr(ctx, cr, log)
+	// }
 
-	// if err := r.Patch(ctx, &crb, client.Apply, applyOpts...); err != nil {
-	if err := r.Update(ctx, &crb); err != nil {
-		log.Error(err, "error is occure when crb")
-		crb := &rbacv1.ClusterRoleBinding{}
-		r.Get(ctx, client.ObjectKey{Name: req.Name}, crb)
-		return r.removeCrb(ctx, crb, log)
-	}
+	// // if err := r.Patch(ctx, &crb, client.Apply, applyOpts...); err != nil {
+	// if err := r.Update(ctx, &crb); err != nil {
+	// 	log.Error(err, "error is occure when crb")
+	// 	crb := &rbacv1.ClusterRoleBinding{}
+	// 	r.Get(ctx, client.ObjectKey{Name: req.Name}, crb)
+	// 	return r.removeCrb(ctx, crb, log)
+	// }
 
-	err = r.Patch(ctx, &job, client.Apply, applyOpts...)
-	if err != nil {
-		log.Error(err, "error is occur when job")
-		job := &batchv1.Job{}
-		r.Get(ctx, req.NamespacedName, job)
-		return r.removeJob(ctx, job, log)
-	}
+	// err = r.Patch(ctx, &job, client.Apply, applyOpts...)
+	// if err != nil {
+	// 	log.Error(err, "error is occur when job")
+	// 	job := &batchv1.Job{}
+	// 	r.Get(ctx, req.NamespacedName, job)
+	// 	return r.removeJob(ctx, job, log)
+	// }
 
-	if err := r.Patch(ctx, &svc, client.Apply, applyOpts...); err != nil {
-		return ctrl.Result{}, err
-	}
-	if err := r.Patch(ctx, &depl, client.Apply, applyOpts...); err != nil {
-		depl := &appsv1.Deployment{}
-		r.Get(ctx, req.NamespacedName, depl)
-		return r.removeDeployment(ctx, depl, log)
-	}
+	// var serviceAddr string
+	// checkSvc := &corev1.Service{}
+	// r.Get(ctx, req.NamespacedName, checkSvc)
+	// // r.getUrl(ctx, *checkSvc, lolg)
+	// // console.Status.LeaderService = string(checkSvc.Spec.Type)
+	// if checkSvc.Spec.Type == corev1.ServiceTypeLoadBalancer {
+	// 	console.Status.TYPE = string(corev1.ServiceTypeLoadBalancer)
+	// 	if checkSvc.Status.LoadBalancer.Ingress == nil || len(checkSvc.Status.LoadBalancer.Ingress) == 0 {
+	// 		serviceAddr = "Undefined"
+	// 	}
+	// 	serviceAddr = "https://" + checkSvc.Status.LoadBalancer.Ingress[0].IP
+	// } else {
+	// 	console.Status.TYPE = string(corev1.ServiceTypeNodePort)
+	// 	if checkSvc.Spec.Ports == nil || len(checkSvc.Spec.Ports) == 0 {
+	// 		serviceAddr = "Undefined"
+	// 	}
+	// 	serviceAddr = "https://<NodeIP>:" + strconv.Itoa(int(checkSvc.Spec.Ports[0].NodePort))
+	// }
+	// console.Status.URL = serviceAddr
+	// log.Info(console.Status.TYPE)
+	// log.Info(console.Status.STATUS)
 
-	var serviceAddr string
-	checkSvc := &corev1.Service{}
-	r.Get(ctx, req.NamespacedName, checkSvc)
-	// r.getUrl(ctx, *checkSvc, lolg)
-	// console.Status.LeaderService = string(checkSvc.Spec.Type)
-	if checkSvc.Spec.Type == corev1.ServiceTypeLoadBalancer {
-		console.Status.TYPE = string(corev1.ServiceTypeLoadBalancer)
-		if checkSvc.Status.LoadBalancer.Ingress == nil || len(checkSvc.Status.LoadBalancer.Ingress) == 0 {
-			serviceAddr = "Undefined"
-		}
-		serviceAddr = "https://" + checkSvc.Status.LoadBalancer.Ingress[0].IP
-	} else {
-		console.Status.TYPE = string(corev1.ServiceTypeNodePort)
-		if checkSvc.Spec.Ports == nil || len(checkSvc.Spec.Ports) == 0 {
-			serviceAddr = "Undefined"
-		}
-		serviceAddr = "https://<NodeIP>:" + strconv.Itoa(int(checkSvc.Spec.Ports[0].NodePort))
-	}
-	console.Status.URL = serviceAddr
-	log.Info(console.Status.TYPE)
-	log.Info(console.Status.STATUS)
+	// checkDepl := &appsv1.Deployment{}
+	// r.Get(ctx, req.NamespacedName, checkDepl)
+	// if checkDepl.Status.Conditions != nil && len(checkDepl.Status.Conditions) != 0 {
+	// 	if checkDepl.Status.Conditions[0].Type == appsv1.DeploymentAvailable {
+	// 		console.Status.STATUS = "Ready"
+	// 	} else {
+	// 		console.Status.STATUS = "Failed"
+	// 	}
+	// } else {
+	// 	console.Status.STATUS = "Undefined"
+	// }
+	// log.Info(console.Status.STATUS)
 
-	checkDepl := &appsv1.Deployment{}
-	r.Get(ctx, req.NamespacedName, checkDepl)
-	if checkDepl.Status.Conditions != nil && len(checkDepl.Status.Conditions) != 0 {
-		if checkDepl.Status.Conditions[0].Type == appsv1.DeploymentAvailable {
-			console.Status.STATUS = "Ready"
-		} else {
-			console.Status.STATUS = "Failed"
-		}
-	} else {
-		console.Status.STATUS = "Undefined"
-	}
-	log.Info(console.Status.STATUS)
-
-	r.Status().Update(ctx, &console)
+	// r.Status().Update(ctx, &console)
 
 	log.Info("reconciled console")
 	return ctrl.Result{}, nil

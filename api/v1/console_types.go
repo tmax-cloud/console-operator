@@ -17,7 +17,6 @@ limitations under the License.
 package v1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,8 +27,7 @@ import (
 type ConsoleSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Configuration Configuration `json:"configuration"`
-	App           ConsoleApp    `json:"app"`
+	Configuration Configuration `json:"configuration" yaml:"configuration" toml:"configuration"`
 }
 
 // +k8s:deepcopy-gen=true
@@ -45,18 +43,7 @@ type Router struct {
 	// Middlewares []string `json:"middlewares,omitempty" toml:"middlewares,omitempty" yaml:"middlewares,omitempty" export:"true"`
 	Server string `json:"server,omitempty" toml:"server,omitempty" yaml:"server,omitempty" export:"true"`
 	Rule   string `json:"rule,omitempty" toml:"rule,omitempty" yaml:"rule,omitempty"`
-	Path   string `json:"path,omitempty" yaml:"path,omitempty"`
-	// Priority    int              `json:"priority,omitempty" toml:"priority,omitempty,omitzero" yaml:"priority,omitempty" export:"true"
-}
-
-type ConsoleApp struct {
-	Repository string `json:"repository,omitempty"`
-	Tag        string `json:"tag,omitempty"`
-
-	// +optional
-	Replicas int32 `json:"replicas,omitempty"`
-	// +optional
-	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`
+	Path   string `json:"path,omitempty" yaml:"path,omitempty" toml:"path,omitempty"`
 }
 
 // ConsoleStatus defines the observed state of Console
@@ -66,13 +53,13 @@ type ConsoleStatus struct {
 
 	// Service Type
 	//+optional
-	TYPE string `json:"type"`
+	TYPE string `json:"type" yaml:"type" toml:"type"`
 	// Console Status
 	// +optional
-	STATUS string `json:"status"`
+	STATUS string `json:"status" yaml:"status" toml:"status"`
 	//url that can access the console UI
 	//+optional
-	URL string `json:"url"`
+	URL string `json:"url" yaml:"url" toml:"url"`
 }
 
 // +kubebuilder:object:root=true
@@ -82,20 +69,20 @@ type ConsoleStatus struct {
 // +kubebuilder:printcolumn:JSONPath=".status.url",name="URL",type="string"
 // Console is the Schema for the consoles API
 type Console struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta   `json:",inline" yaml:",inline" toml:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" toml:"metadata,omitempty"`
 
-	Spec   ConsoleSpec   `json:"spec,omitempty"`
-	Status ConsoleStatus `json:"status,omitempty"`
+	Spec   ConsoleSpec   `json:"spec,omitempty" yaml:"spec,omitempty" toml:"spec,omitempty"`
+	Status ConsoleStatus `json:"status,omitempty" yaml:"status,omitempty" toml:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
 // ConsoleList contains a list of Console
 type ConsoleList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Console `json:"items"`
+	metav1.TypeMeta `json:",inline" yaml:",inline" toml:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty" yaml:"metadata,omitempty" toml:"metadata,omitempty"`
+	Items           []Console `json:"items" yaml:"items" toml:"items"`
 }
 
 func init() {
