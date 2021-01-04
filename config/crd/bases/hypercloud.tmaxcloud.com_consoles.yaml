@@ -17,14 +17,11 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.status
-      name: STATUS
-      type: string
-    - jsonPath: .status.type
-      name: TYPE
-      type: string
-    - jsonPath: .status.url
-      name: URL
+    - jsonPath: .status.number
+      name: READY
+      type: integer
+    - jsonPath: .status.routers
+      name: ROUTERS
       type: string
     name: v1
     schema:
@@ -72,15 +69,13 @@ spec:
           status:
             description: ConsoleStatus defines the observed state of Console
             properties:
-              status:
-                description: Console Status
+              number:
+                description: Status
+                type: integer
+              routers:
                 type: string
-              type:
-                description: Service Type
-                type: string
-              url:
-                description: url that can access the console UI
-                type: string
+            required:
+            - number
             type: object
         type: object
     served: true

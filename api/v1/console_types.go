@@ -51,22 +51,25 @@ type ConsoleStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Service Type
-	//+optional
-	TYPE string `json:"type" yaml:"type" toml:"type"`
-	// Console Status
-	// +optional
-	STATUS string `json:"status" yaml:"status" toml:"status"`
-	//url that can access the console UI
-	//+optional
-	URL string `json:"url" yaml:"url" toml:"url"`
+	// Status
+	Number  int    `json:"number"`
+	Routers string `json:"routers,omitempty" toml:"routers,omitempty" yaml:"routers,omitempty" export:"true"`
+	// // Service Type
+	// //+optional
+	// ROUTER string `json:"router" yaml:"router" toml:"router"`
+	// // Console Status
+	// // +optional
+	// SERVER string `json:"server" yaml:"server" toml:"server"`
+	// //url that can access the console UI
+	// //+optional
+	// RULE string `json:"rule" yaml:"rule" toml:"rule"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:JSONPath=".status.status",name="STATUS",type="string"
-// +kubebuilder:printcolumn:JSONPath=".status.type",name="TYPE",type="string"
-// +kubebuilder:printcolumn:JSONPath=".status.url",name="URL",type="string"
+// +kubebuilder:printcolumn:JSONPath=".status.number",name="READY",type="integer"
+// +kubebuilder:printcolumn:JSONPath=".status.routers",name="ROUTERS",type="string"
+
 // Console is the Schema for the consoles API
 type Console struct {
 	metav1.TypeMeta   `json:",inline" yaml:",inline" toml:",inline"`

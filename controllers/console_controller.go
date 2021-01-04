@@ -18,14 +18,12 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/go-logr/logr"
 	hypercloudv1 "github.com/tmax-cloud/console-operator/api/v1"
 	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -51,6 +49,7 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	log.Info("Reconciling Console")
 
 	var console hypercloudv1.Console
+
 	if err := r.Get(ctx, req.NamespacedName, &console); err != nil {
 		log.Info("Unable to fetch Console", "Error", err)
 
@@ -69,21 +68,50 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	log.Info(console.Namespace + "/" + console.Name)
 
-	fmt.Printf("Original: \n %v \n", console)
 	yamlConsole := console.DeepCopy()
 
-	yamlFile, _ := yaml.Marshal(yamlConsole.Spec.Configuration)
+	config := yamlConsole.Spec.Configuration
+	yamlFile, _ := yaml.Marshal(config)
 	fy, _ := os.Create("/home/jinsoo/console-yaml.yaml")
-	fy.Write(yamlFile)
-	jsonFile, _ := json.Marshal(console.DeepCopyObject())
-	fj, _ := os.Create("/home/jinsoo/console-json.json")
-	fj.Write(jsonFile)
-
-	yaml.Unmarshal(yamlFile, &console)
+	_, err := fy.Write(yamlFile)
+	if err != nil {
+		return ctrl.Result{Requeue: false}, err
+	}
+	err = yaml.Unmarshal(yamlFile, &console)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 	fmt.Printf("YAML: \n %v \n", console)
 
-	json.Unmarshal(jsonFile, &console)
-	fmt.Printf("JSON: \n %v \n", console)
+	console.Status.Number = 0
+	console.Status.Routers = ""
+	for name, router := range config.Routers {
+		console.Status.Number = console.Status.Number + 1
+		temp := "[" + name + " : " + router.Server + " " + router.Path + "]"
+		console.Status.Routers = console.Status.Routers + "  " + temp
+	}
+	if err := r.Status().Update(ctx, &console); err != nil {
+		log.Error(err, "unable to update CronJob status")
+		return ctrl.Result{}, err
+	}
+	// // var i int
+	// i := 0
+	// for name, router := range config.Routers {
+	// 	i = i + 1
+	// 	_ = router
+	// 	console.Status.Routers = console.Status.Routers + " , " + name
+	// 	console.Status.Number = i
+	// }
+	// err := r.Status().Update(ctx, &console)
+	// if err != nil {
+	// 	return reconcile.Result{}, err
+	// }
+	// jsonFile, _ := json.Marshal(console.DeepCopyObject())
+	// fj, _ := os.Create("/home/jinsoo/console-json.json")
+	// fj.Write(jsonFile)
+	// json.Unmarshal(jsonFile, &console)
+	// fmt.Printf("JSON: \n %v \n", console)
+
 	// log.Info("wrote  file : %v ", n1)
 	// viper.AddConfigPath("/root/")
 	// viper.SafeWriteConfig()
@@ -186,6 +214,6 @@ func (r *ConsoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&hypercloudv1.Console{}).
-		Owns(&v1.ConfigMap{}).
+		// Owns(&v1.ConfigMap{}).
 		Complete(r)
 }
