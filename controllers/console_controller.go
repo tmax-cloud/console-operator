@@ -33,8 +33,9 @@ import (
 // ConsoleReconciler reconciles a Console object
 type ConsoleReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
+	Log           logr.Logger
+	Scheme        *runtime.Scheme
+	DynamicConfig string
 }
 
 // +kubebuilder:rbac:groups=hypercloud.tmaxcloud.com,resources=consoles,verbs=get;list;watch;create;update;patch;delete
@@ -72,7 +73,7 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	config := yamlConsole.Spec.Configuration
 	yamlFile, _ := yaml.Marshal(config)
-	fy, _ := os.Create("/home/jinsoo/console-yaml.yaml")
+	fy, _ := os.Create(r.DynamicConfig)
 	_, err := fy.Write(yamlFile)
 	if err != nil {
 		return ctrl.Result{Requeue: false}, err

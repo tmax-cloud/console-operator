@@ -46,7 +46,9 @@ func init() {
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
+	var dynamicConfig string
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8088", "The address the metric endpoint binds to.")
+	flag.StringVar(&dynamicConfig, "dynamic-config", "configs/dynamic-config.yaml", "The YAML proxy dynamic config file. (default file name: configs/dynamic-config.yaml)")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -67,9 +69,10 @@ func main() {
 	}
 
 	if err = (&controllers.ConsoleReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Console"),
-		Scheme: mgr.GetScheme(),
+		Client:        mgr.GetClient(),
+		Log:           ctrl.Log.WithName("controllers").WithName("Console"),
+		Scheme:        mgr.GetScheme(),
+		DynamicConfig: dynamicConfig,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Console")
 		os.Exit(1)
