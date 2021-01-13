@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/go-logr/logr"
@@ -82,14 +81,14 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	fmt.Printf("YAML: \n %v \n", console)
+	// fmt.Printf("YAML: \n %v \n", console)
 
 	console.Status.Number = 0
 	console.Status.Routers = ""
 	for name, router := range config.Routers {
 		console.Status.Number = console.Status.Number + 1
-		temp := "[" + name + " : " + router.Server + " " + router.Path + "]"
-		console.Status.Routers = console.Status.Routers + "  " + temp
+		temp := "[" + name + " : " + router.Server + " " + router.Path + "]  "
+		console.Status.Routers = console.Status.Routers + temp
 	}
 	if err := r.Status().Update(ctx, &console); err != nil {
 		log.Error(err, "unable to update CronJob status")
