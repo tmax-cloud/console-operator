@@ -40,7 +40,6 @@ type Configuration struct {
 
 // Router holds the router configuration.
 type Router struct {
-	// Middlewares []string `json:"middlewares,omitempty" toml:"middlewares,omitempty" yaml:"middlewares,omitempty" export:"true"`
 	Server string `json:"server,omitempty" toml:"server,omitempty" yaml:"server,omitempty" export:"true"`
 	Rule   string `json:"rule,omitempty" toml:"rule,omitempty" yaml:"rule,omitempty"`
 	Path   string `json:"path,omitempty" yaml:"path,omitempty" toml:"path,omitempty"`
@@ -54,15 +53,6 @@ type ConsoleStatus struct {
 	// Status
 	Number  int    `json:"number"`
 	Routers string `json:"routers,omitempty" toml:"routers,omitempty" yaml:"routers,omitempty" export:"true"`
-	// // Service Type
-	// //+optional
-	// ROUTER string `json:"router" yaml:"router" toml:"router"`
-	// // Console Status
-	// // +optional
-	// SERVER string `json:"server" yaml:"server" toml:"server"`
-	// //url that can access the console UI
-	// //+optional
-	// RULE string `json:"rule" yaml:"rule" toml:"rule"`
 }
 
 // +kubebuilder:object:root=true

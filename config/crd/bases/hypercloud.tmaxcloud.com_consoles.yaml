@@ -56,9 +56,6 @@ spec:
                         rule:
                           type: string
                         server:
-                          description: Middlewares []string `json:"middlewares,omitempty"
-                            toml:"middlewares,omitempty" yaml:"middlewares,omitempty"
-                            export:"true"`
                           type: string
                       type: object
                     type: object
