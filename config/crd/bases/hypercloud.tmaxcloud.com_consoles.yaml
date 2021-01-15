@@ -71,8 +71,6 @@ spec:
                 type: integer
               routers:
                 type: string
-            required:
-            - number
             type: object
         type: object
     served: true

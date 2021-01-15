@@ -27,7 +27,7 @@ import (
 type ConsoleSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Configuration Configuration `json:"configuration" yaml:"configuration" toml:"configuration"`
+	Configuration Configuration `json:"configuration" yaml:"configuration" toml:"configuration" export:"true"`
 }
 
 // +k8s:deepcopy-gen=true
@@ -41,8 +41,8 @@ type Configuration struct {
 // Router holds the router configuration.
 type Router struct {
 	Server string `json:"server,omitempty" toml:"server,omitempty" yaml:"server,omitempty" export:"true"`
-	Rule   string `json:"rule,omitempty" toml:"rule,omitempty" yaml:"rule,omitempty"`
-	Path   string `json:"path,omitempty" yaml:"path,omitempty" toml:"path,omitempty"`
+	Rule   string `json:"rule,omitempty" toml:"rule,omitempty" yaml:"rule,omitempty" export:"true"`
+	Path   string `json:"path,omitempty" yaml:"path,omitempty" toml:"path,omitempty" export:"true"`
 }
 
 // ConsoleStatus defines the observed state of Console
@@ -51,7 +51,7 @@ type ConsoleStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Status
-	Number  int    `json:"number"`
+	Number  int    `json:"number,omitempty" toml:"number,omitempoty" yaml:"routers,omitempoty" export:"true"`
 	Routers string `json:"routers,omitempty" toml:"routers,omitempty" yaml:"routers,omitempty" export:"true"`
 }
 
