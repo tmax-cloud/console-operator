@@ -51,19 +51,27 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if err := r.Get(ctx, req.NamespacedName, &console); err != nil {
 		log.Info("Unable to get Console", "Error", err)
-
+		log.Info("Delete config file ", "fileName : ", r.DynamicConfig)
+		os.Remove(r.DynamicConfig)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	log.Info(console.Namespace + "/" + console.Name)
 
-	yamlConsole := console
-
-	config := yamlConsole.Spec.Configuration
-	yamlFile, _ := yaml.Marshal(config)
-	fy, _ := os.Create(r.DynamicConfig)
+	config := console.Spec.Configuration.DeepCopy()
+	yamlFile, err := yaml.Marshal(config)
+	if err != nil {
+		log.Error(err, "Error occur when marshaling config", config)
+		return ctrl.Result{Requeue: false}, err
+	}
+	fy, err := os.Create(r.DynamicConfig)
+	if err != nil {
+		log.Error(err, "Error occur when create config", config)
+		return ctrl.Result{Requeue: false}, err
+	}
 	_, err = fy.Write(yamlFile)
 	if err != nil {
+		log.Error(err, "Error occur when write config", config)
 		return ctrl.Result{Requeue: false}, err
 	}
 
