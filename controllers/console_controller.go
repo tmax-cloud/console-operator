@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/go-logr/logr"
@@ -31,9 +32,10 @@ import (
 // ConsoleReconciler reconciles a Console object
 type ConsoleReconciler struct {
 	client.Client
-	Log           logr.Logger
-	Scheme        *runtime.Scheme
-	DynamicConfig string
+	Log         logr.Logger
+	Scheme      *runtime.Scheme
+	ConfigFiles map[string]string
+	PWD         string
 }
 
 // +kubebuilder:rbac:groups=hypercloud.tmaxcloud.com,resources=consoles,verbs=get;list;watch;create;update;patch;delete
@@ -41,38 +43,44 @@ type ConsoleReconciler struct {
 // +kubebuilder:rbac:groups="",resources=*,verbs=*
 
 func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	var console hypercloudv1.Console
 	var err error
+
+	key := req.Name + "@" + req.Namespace
+	fileName := req.Name + "@" + req.Namespace + ".yaml"
+	pwd := r.PWD
+
 	ctx := context.Background()
 	log := r.Log.WithValues("console", req.NamespacedName)
 
 	log.Info("Reconciling Console")
 
-	var console hypercloudv1.Console
-
 	if err := r.Get(ctx, req.NamespacedName, &console); err != nil {
 		log.Info("Unable to get Console", "Error", err)
-		log.Info("Delete config file ", "fileName : ", r.DynamicConfig)
-		os.Remove(r.DynamicConfig)
+		log.Info(fmt.Sprintf("Delete config file. fileName : %v", fileName))
+		os.Remove(pwd + fileName)
+		delete(r.ConfigFiles, key)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	log.Info(console.Namespace + "/" + console.Name)
 
+	file, err := os.Create(pwd + fileName)
+	if err != nil {
+		return ctrl.Result{Requeue: false}, err
+	}
 	config := console.Spec.Configuration.DeepCopy()
 	yamlFile, err := yaml.Marshal(config)
 	if err != nil {
-		log.Error(err, "Error occur when marshaling config", config)
 		return ctrl.Result{Requeue: false}, err
 	}
-	fy, err := os.Create(r.DynamicConfig)
+	_, err = file.Write(yamlFile)
 	if err != nil {
-		log.Error(err, "Error occur when create config", config)
 		return ctrl.Result{Requeue: false}, err
 	}
-	_, err = fy.Write(yamlFile)
-	if err != nil {
-		log.Error(err, "Error occur when write config", config)
-		return ctrl.Result{Requeue: false}, err
+	_, exists := r.ConfigFiles[key]
+	if !exists {
+		r.ConfigFiles[key] = fileName
 	}
 
 	console.Status.Number = 0
@@ -83,9 +91,12 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		console.Status.Routers = console.Status.Routers + temp
 	}
 	if err := r.Status().Update(ctx, &console); err != nil {
-		log.Info("unable to update Console status", "Error :", err)
+		log.Info("unable to update Console status")
 		return ctrl.Result{}, err
 	}
+
+	count := len(r.ConfigFiles)
+	log.Info(fmt.Sprintf("Console Controller has %v files. %v", count, r.ConfigFiles))
 
 	log.Info("reconciled console")
 	return ctrl.Result{}, nil

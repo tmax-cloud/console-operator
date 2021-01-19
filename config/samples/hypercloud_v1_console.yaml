@@ -9,10 +9,11 @@ apiVersion: hypercloud.tmaxcloud.com/v1
 kind: Console
 metadata:
   name: hc-console1
+  namespace: kube-system
 spec:
   configuration:
     routers:
-      show:
+      test:
         server: "http://192.168.8.62:9002/"
         rule: "Host(`console`) && PathPrefix(`/console/`)"
         path: "/console/"
@@ -24,11 +25,3 @@ spec:
         server: "https://www.daum.com/"
         rule: "Host(`daum.com`) && PathPrefix(`/daum/`)"
         path: "/daum/"
-      google:
-        server: "https://google.com/"
-        rule: "Host(`google.com`) && PathPrefix(`/google/`)"
-        path: "/google/"
-      k8s: 
-        server: "https://172.23.0.2/"
-        rule: "PathPrefix(`/api/k8s/test/`)" 
-        path: "/api/k8s/test/"

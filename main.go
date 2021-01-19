@@ -41,14 +41,15 @@ func init() {
 
 	_ = hypercloudv1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
+
 }
 
 func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
-	var dynamicConfig string
+	var pwd string
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8088", "The address the metric endpoint binds to.")
-	flag.StringVar(&dynamicConfig, "dynamic-config", "configs/dynamic-config.yaml", "The YAML proxy dynamic config file. (default file name: configs/dynamic-config.yaml)")
+	flag.StringVar(&pwd, "pwd", "/var/tmp/configs/", "The working directory to store the config files")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -69,14 +70,24 @@ func main() {
 	}
 
 	if err = (&controllers.ConsoleReconciler{
-		Client:        mgr.GetClient(),
-		Log:           ctrl.Log.WithName("controllers").WithName("Console"),
-		Scheme:        mgr.GetScheme(),
-		DynamicConfig: dynamicConfig,
+		Client:      mgr.GetClient(),
+		Log:         ctrl.Log.WithName("controllers").WithName("Console"),
+		Scheme:      mgr.GetScheme(),
+		ConfigFiles: make(map[string]string),
+		PWD:         pwd,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Console")
 		os.Exit(1)
 	}
+
+	if _, err := os.Stat(pwd); os.IsNotExist(err) {
+		setupLog.Info("NOT Exist Directory! Create directory ", "PWD", pwd)
+		err := os.Mkdir(pwd, 0777)
+		if err != nil {
+			os.Exit(1)
+		}
+	}
+
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
@@ -84,4 +95,5 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+
 }
