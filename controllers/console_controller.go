@@ -24,6 +24,7 @@ import (
 	"github.com/go-logr/logr"
 	hypercloudv1 "github.com/tmax-cloud/console-operator/api/v1"
 	"gopkg.in/yaml.v2"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -36,10 +37,11 @@ const (
 // ConsoleReconciler reconciles a Console object
 type ConsoleReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
-	PWD    string
-	Config map[string]*hypercloudv1.Configuration
+	Log       logr.Logger
+	Scheme    *runtime.Scheme
+	PWD       string
+	Config    map[string]*hypercloudv1.Configuration
+	NameSpace string
 }
 
 // +kubebuilder:rbac:groups=hypercloud.tmaxcloud.com,resources=consoles,verbs=get;list;watch;create;update;patch;delete
@@ -99,6 +101,7 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 	// END
 
+	//Update console status
 	console.Status.Number = 0
 	console.Status.Routers = ""
 	for name, router := range config.Routers {
@@ -117,6 +120,38 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		showName = append(showName, name)
 	}
 	log.Info(fmt.Sprintf("Console Controller has the %v files -> %v", count, showName))
+	// END
+
+	// // [Deplicated]
+	// // Create a configMap named dynamic-config where has a config file named "dynamic-config.yaml".
+	// currentConfigMap := &corev1.ConfigMap{}
+	// newConfigMap, err := r.createConfigMap()
+	// if err != nil {
+	// 	return ctrl.Result{Requeue: false}, err
+	// }
+	// err = r.Get(ctx, types.NamespacedName{Name: "dynamic-config", Namespace: r.NameSpace}, currentConfigMap)
+	// if err == nil {
+	// 	if !reflect.DeepEqual(currentConfigMap.BinaryData, newConfigMap.BinaryData) {
+	// 		log.Info(fmt.Sprintf("ConfigMap will be changed: %v", "dynamic-config"))
+	// 		if err = r.Delete(ctx, currentConfigMap); err != nil {
+	// 			log.Info("Failed to delete old configmap", "error", err.Error())
+	// 		}
+	// 		if r.Update(ctx, newConfigMap) != nil {
+	// 			return ctrl.Result{}, err
+	// 		}
+	// 	}
+	// } else {
+	// 	if errors.IsNotFound(err) {
+	// 		if r.Create(ctx, newConfigMap) != nil {
+	// 			log.Error(err, err.Error())
+	// 			return ctrl.Result{}, err
+	// 		}
+	// 	} else {
+	// 		log.Error(err, err.Error())
+	// 		return ctrl.Result{}, err
+	// 	}
+	// }
+	// // configmap END
 
 	log.Info("reconciled console")
 	return ctrl.Result{}, nil
@@ -126,6 +161,7 @@ func (r *ConsoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&hypercloudv1.Console{}).
+		Owns(&corev1.ConfigMap{}).
 		Complete(r)
 }
 
@@ -160,3 +196,34 @@ func (r *ConsoleReconciler) createProxyFile(fileName string) error {
 	}
 	return nil
 }
+
+// // [DEPLICATED] When we use  configMap, the updating time is too long (may be 1min )
+// func (r *ConsoleReconciler) createConfigMap() (*corev1.ConfigMap, error) {
+// 	temp := hypercloudv1.Configuration{
+// 		Routers: make(map[string]*hypercloudv1.Router),
+// 	}
+// 	for _, conf := range r.Config {
+// 		for name, router := range conf.Routers {
+// 			temp.Routers[name] = router
+// 		}
+// 	}
+// 	yamlConfig, err := yaml.Marshal(temp)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	proxyConfigMap := &corev1.ConfigMap{
+// 		TypeMeta: metav1.TypeMeta{
+// 			Kind:       "ConfigMap",
+// 			APIVersion: "v1",
+// 		},
+// 		ObjectMeta: metav1.ObjectMeta{
+// 			Name:      "dynamic-config",
+// 			Namespace: r.NameSpace,
+// 		},
+// 		BinaryData: map[string][]byte{
+// 			"dynamic-config.yaml": yamlConfig,
+// 		},
+// 	}
+// 	return proxyConfigMap, nil
+// }

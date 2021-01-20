@@ -40,9 +40,12 @@ type Configuration struct {
 
 // Router holds the router configuration.
 type Router struct {
+	// Backend Server Name
 	Server string `json:"server,omitempty" toml:"server,omitempty" yaml:"server,omitempty" export:"true"`
-	Rule   string `json:"rule,omitempty" toml:"rule,omitempty" yaml:"rule,omitempty" export:"true"`
-	Path   string `json:"path,omitempty" yaml:"path,omitempty" toml:"path,omitempty" export:"true"`
+	// Reverse proxy rule
+	Rule string `json:"rule,omitempty" toml:"rule,omitempty" yaml:"rule,omitempty" export:"true"`
+	// If want to remove url path when proxy server request backend
+	Path string `json:"path,omitempty" yaml:"path,omitempty" toml:"path,omitempty" export:"true"`
 }
 
 // ConsoleStatus defines the observed state of Console
@@ -50,8 +53,9 @@ type ConsoleStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Status
-	Number  int    `json:"number,omitempty" toml:"number,omitempoty" yaml:"routers,omitempoty" export:"true"`
+	// Show the number of backend proxy
+	Number int `json:"number,omitempty" toml:"number,omitempoty" yaml:"routers,omitempoty" export:"true"`
+	// Config information
 	Routers string `json:"routers,omitempty" toml:"routers,omitempty" yaml:"routers,omitempty" export:"true"`
 }
 

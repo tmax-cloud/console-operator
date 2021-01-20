@@ -52,10 +52,14 @@ spec:
                       description: Router holds the router configuration.
                       properties:
                         path:
+                          description: If want to remove url path when proxy server
+                            request backend
                           type: string
                         rule:
+                          description: Reverse proxy rule
                           type: string
                         server:
+                          description: Backend Server Name
                           type: string
                       type: object
                     type: object
@@ -67,9 +71,10 @@ spec:
             description: ConsoleStatus defines the observed state of Console
             properties:
               number:
-                description: Status
+                description: Show the number of backend proxy
                 type: integer
               routers:
+                description: Config information
                 type: string
             type: object
         type: object
