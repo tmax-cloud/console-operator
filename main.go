@@ -70,11 +70,11 @@ func main() {
 	}
 
 	if err = (&controllers.ConsoleReconciler{
-		Client:      mgr.GetClient(),
-		Log:         ctrl.Log.WithName("controllers").WithName("Console"),
-		Scheme:      mgr.GetScheme(),
-		ConfigFiles: make(map[string]string),
-		PWD:         pwd,
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("Console"),
+		Scheme: mgr.GetScheme(),
+		PWD:    pwd,
+		Config: make(map[string]*hypercloudv1.Configuration),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Console")
 		os.Exit(1)

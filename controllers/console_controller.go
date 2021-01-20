@@ -29,13 +29,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	configFileName = "dynamic-config.yaml"
+)
+
 // ConsoleReconciler reconciles a Console object
 type ConsoleReconciler struct {
 	client.Client
-	Log         logr.Logger
-	Scheme      *runtime.Scheme
-	ConfigFiles map[string]string
-	PWD         string
+	Log    logr.Logger
+	Scheme *runtime.Scheme
+	PWD    string
+	Config map[string]*hypercloudv1.Configuration
 }
 
 // +kubebuilder:rbac:groups=hypercloud.tmaxcloud.com,resources=consoles,verbs=get;list;watch;create;update;patch;delete
@@ -58,30 +62,42 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if err := r.Get(ctx, req.NamespacedName, &console); err != nil {
 		log.Info("Unable to get Console", "Error", err)
 		log.Info(fmt.Sprintf("Delete config file. fileName : %v", fileName))
+
 		os.Remove(pwd + fileName)
-		delete(r.ConfigFiles, key)
+		delete(r.Config, key)
+		err = r.createProxyFile(pwd + configFileName)
+		if err != nil {
+			return ctrl.Result{Requeue: false}, err
+		}
+
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	log.Info(console.Namespace + "/" + console.Name)
 
-	file, err := os.Create(pwd + fileName)
-	if err != nil {
-		return ctrl.Result{Requeue: false}, err
-	}
+	// Create ConfigFile correspoding to each console CR
 	config := console.Spec.Configuration.DeepCopy()
-	yamlFile, err := yaml.Marshal(config)
+	err = r.createConfigFile(pwd+fileName, config)
 	if err != nil {
 		return ctrl.Result{Requeue: false}, err
 	}
-	_, err = file.Write(yamlFile)
+	// END
+
+	// // Create a ConfigFile which adding ALL console cr
+	// r.Config[key] = console.Spec.Configuration.DeepCopy()
+	// err = r.createConfigFile(pwd+"all.yaml", r.Config)
+	// if err != nil {
+	// 	return ctrl.Result{Requeue: false}, err
+	// }
+	// // END
+
+	// Create a ConfigFile without console Name, only show router config
+	r.Config[key] = console.Spec.Configuration.DeepCopy()
+	err = r.createProxyFile(pwd + configFileName)
 	if err != nil {
 		return ctrl.Result{Requeue: false}, err
 	}
-	_, exists := r.ConfigFiles[key]
-	if !exists {
-		r.ConfigFiles[key] = fileName
-	}
+	// END
 
 	console.Status.Number = 0
 	console.Status.Routers = ""
@@ -95,8 +111,12 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 
-	count := len(r.ConfigFiles)
-	log.Info(fmt.Sprintf("Console Controller has %v files. %v", count, r.ConfigFiles))
+	count := len(r.Config)
+	var showName []string
+	for name := range r.Config {
+		showName = append(showName, name)
+	}
+	log.Info(fmt.Sprintf("Console Controller has the %v files -> %v", count, showName))
 
 	log.Info("reconciled console")
 	return ctrl.Result{}, nil
@@ -107,4 +127,36 @@ func (r *ConsoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&hypercloudv1.Console{}).
 		Complete(r)
+}
+
+func (r *ConsoleReconciler) createConfigFile(fileName string, config interface{}) error {
+	file, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	yamlConfig, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+	_, err = file.Write(yamlConfig)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ConsoleReconciler) createProxyFile(fileName string) error {
+	temp := hypercloudv1.Configuration{
+		Routers: make(map[string]*hypercloudv1.Router),
+	}
+	for _, conf := range r.Config {
+		for name, router := range conf.Routers {
+			temp.Routers[name] = router
+		}
+	}
+	err := r.createConfigFile(fileName, temp)
+	if err != nil {
+		return err
+	}
+	return nil
 }
