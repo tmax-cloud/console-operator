@@ -49,7 +49,7 @@ func main() {
 	var enableLeaderElection bool
 	var pwd string
 	var namespace string
-	flag.StringVar(&metricsAddr, "metrics-addr", ":8088", "The address the metric endpoint binds to.")
+	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&pwd, "pwd", "/var/tmp/configs/", "The working directory to store the config files")
 	flag.StringVar(&namespace, "namespace", "console-system", "The NameSpace where the operator is installed")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
