@@ -8,8 +8,8 @@
 apiVersion: hypercloud.tmaxcloud.com/v1
 kind: Console
 metadata:
-  name: hc-console1
-  namespace: kube-system
+  name: hc-console
+  namespace: console-system
 spec:
   configuration:
     routers:
