@@ -48,10 +48,10 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var pwd string
-	var namespace string
+	// var namespace string
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&pwd, "pwd", "/var/tmp/configs/", "The working directory to store the config files")
-	flag.StringVar(&namespace, "namespace", "console-system", "The NameSpace where the operator is installed")
+	// flag.StringVar(&namespace, "namespace", "console-system", "The NameSpace where the operator is installed")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -72,12 +72,12 @@ func main() {
 	}
 
 	if err = (&controllers.ConsoleReconciler{
-		Client:    mgr.GetClient(),
-		Log:       ctrl.Log.WithName("controllers").WithName("Console"),
-		Scheme:    mgr.GetScheme(),
-		PWD:       pwd,
-		NameSpace: namespace,
-		Config:    make(map[string]*hypercloudv1.Configuration),
+		Client: mgr.GetClient(),
+		Log:    ctrl.Log.WithName("controllers").WithName("Console"),
+		Scheme: mgr.GetScheme(),
+		PWD:    pwd,
+		// NameSpace: namespace,
+		Config: make(map[string]*hypercloudv1.Configuration),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Console")
 		os.Exit(1)

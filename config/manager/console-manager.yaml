@@ -40,8 +40,8 @@ spec:
         - /manager
         args:
         - --pwd=/var/tmp/configs/
-        - --namespace=console-system
-        image: jinsnow/watch-operator:0.0.7
+        # - --namespace=console-system
+        image: tmaxcloudck/console-operator:@@VER@@
         name: manager
         resources:
           limits:
@@ -53,6 +53,7 @@ spec:
         volumeMounts:
         - mountPath: /var/tmp/configs
           name: dynamic-config
+      serviceAccountName: @@NAME_NS@@-admin
       terminationGracePeriodSeconds: 10
       volumes:
       - name: dynamic-config 

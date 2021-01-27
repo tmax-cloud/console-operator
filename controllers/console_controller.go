@@ -37,11 +37,11 @@ const (
 // ConsoleReconciler reconciles a Console object
 type ConsoleReconciler struct {
 	client.Client
-	Log       logr.Logger
-	Scheme    *runtime.Scheme
-	PWD       string
-	Config    map[string]*hypercloudv1.Configuration
-	NameSpace string
+	Log    logr.Logger
+	Scheme *runtime.Scheme
+	PWD    string
+	Config map[string]*hypercloudv1.Configuration
+	// NameSpace string
 }
 
 // +kubebuilder:rbac:groups=hypercloud.tmaxcloud.com,resources=consoles,verbs=get;list;watch;create;update;patch;delete
