@@ -25,6 +25,7 @@ import (
 	hypercloudv1 "github.com/tmax-cloud/console-operator/api/v1"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,7 +61,6 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("console", req.NamespacedName)
 
 	log.Info("Reconciling Console")
-
 	if err := r.Get(ctx, req.NamespacedName, &console); err != nil {
 		log.Info("Unable to get Console", "Error", err)
 		log.Info(fmt.Sprintf("Delete config file. fileName : %v", fileName))
@@ -100,6 +100,9 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{Requeue: false}, err
 	}
 	// END
+
+	_ = &networkingv1beta1.Ingress{}
+	// t.APIVersion
 
 	//Update console status
 	console.Status.Number = 0
@@ -167,6 +170,13 @@ func (r *ConsoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *ConsoleReconciler) createConfigFile(fileName string, config interface{}) error {
 	file, err := os.Create(fileName)
+	if err != nil {
+		return nil
+	}
+	err = file.Chmod(0777)
+	if err != nil {
+		return nil
+	}
 	if err != nil {
 		return err
 	}

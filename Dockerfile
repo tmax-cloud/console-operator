@@ -22,6 +22,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o manager 
 FROM gcr.io/distroless/base
 WORKDIR /
 COPY --from=builder /workspace/manager .
-USER 1001:1001
+# USER 1001:1001
 
 ENTRYPOINT ["/manager"]
