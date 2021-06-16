@@ -1,6 +1,6 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= tmaxcloudck/console-operator:5.1.0.1
+IMG ?= tmaxcloudck/console-operator:5.0.0.2
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 # CRD_OPTIONS ?= "crd:trivialVersions=true"
 CRD_OPTIONS ?= "crd:crdVersions=v1"

@@ -67,7 +67,7 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 		os.Remove(pwd + fileName)
 		delete(r.Config, key)
-		err = r.createProxyFile(pwd + configFileName)
+		err = r.createProxyFile(pwd+configFileName, req.Namespace)
 		if err != nil {
 			return ctrl.Result{Requeue: false}, err
 		}
@@ -95,7 +95,7 @@ func (r *ConsoleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// Create a ConfigFile without console Name, only show router config
 	r.Config[key] = console.Spec.Configuration.DeepCopy()
-	err = r.createProxyFile(pwd + configFileName)
+	err = r.createProxyFile(pwd+configFileName, req.Namespace)
 	if err != nil {
 		return ctrl.Result{Requeue: false}, err
 	}
@@ -166,6 +166,9 @@ func (r *ConsoleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&hypercloudv1.Console{}).
 		Owns(&corev1.ConfigMap{}).
 		Complete(r)
+
+	// watches 함수 참고
+	// https://github.com/Tencent/bk-bcs/blob/09a1981c2e0f4f8309bdeeb427a7e1e01fa62c3c/bcs-network/bcs-ingress-controller/ingresscontroller/ingress_controller.go
 }
 
 func (r *ConsoleReconciler) createConfigFile(fileName string, config interface{}) error {
@@ -191,13 +194,13 @@ func (r *ConsoleReconciler) createConfigFile(fileName string, config interface{}
 	return nil
 }
 
-func (r *ConsoleReconciler) createProxyFile(fileName string) error {
+func (r *ConsoleReconciler) createProxyFile(fileName string, namespace string) error {
 	temp := hypercloudv1.Configuration{
 		Routers: make(map[string]*hypercloudv1.Router),
 	}
 	for _, conf := range r.Config {
 		for name, router := range conf.Routers {
-			temp.Routers[name] = router
+			temp.Routers[name+"#"+namespace] = router
 		}
 	}
 	err := r.createConfigFile(fileName, temp)
